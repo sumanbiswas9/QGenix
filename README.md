@@ -78,3 +78,4 @@ Required environment variables (see `env.example`):
 - `STORAGE_BUCKET`, `STORAGE_REGION`, `STORAGE_ACCESS_KEY`, `STORAGE_SECRET_KEY` - AWS S3 credentials
 - `OCR_PROVIDER_API_KEY`, `OCR_PROVIDER_BASE_URL` - Optional, for handwritten answer OCR
 # QGenix
+# QGenix
