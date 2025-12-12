@@ -1,0 +1,134 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  ADMIN
+}
+
+enum PracticeType {
+  MCQ
+  SAQ
+  LA
+  HANDWRITTEN
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum AttemptMode {
+  PRACTICE
+  MOCK
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  passwordHash  String
+  role          Role           @default(STUDENT)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  refreshTokens RefreshToken[]
+  attempts      Attempt[]
+  mockExams     MockExamPattern[]
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Course {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  semesters Semester[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model Semester {
+  id        String    @id @default(cuid())
+  number    Int
+  course    Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  courseId  String
+  subjects  Subject[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([courseId, number])
+}
+
+model Subject {
+  id         String        @id @default(cuid())
+  name       String
+  semester   Semester      @relation(fields: [semesterId], references: [id], onDelete: Cascade)
+  semesterId String
+  syllabus   SyllabusItem[]
+  mockExams  MockExamPattern[]
+  attempts   Attempt[]
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@unique([semesterId, name])
+}
+
+model SyllabusItem {
+  id         String   @id @default(cuid())
+  subject    Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  subjectId  String
+  module     Int
+  unit       Int
+  topic      String
+  details    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([subjectId, module, unit])
+}
+
+model MockExamPattern {
+  id          String   @id @default(cuid())
+  title       String
+  subject     Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  subjectId   String
+  sections    Json     // {name, count, marks, type, difficulty}
+  published   Boolean  @default(false)
+  questions   Json?
+  createdBy   User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Attempt {
+  id         String       @id @default(cuid())
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String
+  subject    Subject      @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  subjectId  String
+  type       PracticeType
+  mode       AttemptMode
+  questions  Json         // stored question set
+  responses  Json         // user answers
+  evaluation Json         // AI feedback + scores
+  score      Float?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  @@index([userId, subjectId, createdAt])
+}
+

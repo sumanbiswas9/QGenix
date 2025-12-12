@@ -1,0 +1,12 @@
+node_modules
+.next
+.env
+.env.local
+.env.production
+.vercel
+*.log
+.DS_Store
+scripts/
+CODE_ANALYSIS.md
+CRITICAL_ISSUES.md
+DEPLOYMENT.md
